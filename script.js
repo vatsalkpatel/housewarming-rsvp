@@ -198,7 +198,6 @@ function prepareFormData() {
         email: emailInput.value.trim(),
         guests: parseInt(guests),
         attending: document.querySelector('input[name="attending"]:checked').value,
-        requests: document.getElementById('requests').value.trim(),
         timestamp: new Date().toISOString(),
         formattedDate: new Date().toLocaleDateString('en-US', { 
             year: 'numeric', 
