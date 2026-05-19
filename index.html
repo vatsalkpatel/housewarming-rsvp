@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housewarming & Puja Celebration - RSVP</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background"></div>
+    
+    <main class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">✨</div>
+                <h1>You're Invited</h1>
+                <p class="subtitle">Join us for a celebration of new beginnings</p>
+            </div>
+        </header>
+
+        <!-- Event Details -->
+        <section class="event-details">
+            <div class="detail-card">
+                <div class="detail-icon">📍</div>
+                <h3>Location</h3>
+                <p>5443 Brinson Ln</p>
+                <p>Kalamazoo, MI 49009</p>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-icon">📅</div>
+                <h3>Date & Time</h3>
+                <p>Saturday, July 18, 2026</p>
+                <p>3:30 PM</p>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-icon">👥</div>
+                <h3>Hosted By</h3>
+                <p>Pinky & Rakesh</p>
+                <p style="font-size: 0.9em; opacity: 0.7;">Housewarming & Puja</p>
+            </div>
+        </section>
+
+        <!-- Countdown Timer -->
+        <section class="countdown-section">
+            <h2>RSVP Deadline</h2>
+            <div class="countdown" id="countdown">
+                <div class="countdown-item">
+                    <span class="countdown-value" id="days">00</span>
+                    <span class="countdown-label">Days</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="hours">00</span>
+                    <span class="countdown-label">Hours</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="minutes">00</span>
+                    <span class="countdown-label">Minutes</span>
+                </div>
+            </div>
+            <p class="deadline-date">Friday, June 18, 2026</p>
+        </section>
+
+        <!-- RSVP Form -->
+        <section class="rsvp-section">
+            <h2>RSVP</h2>
+            <div id="formMessage" class="form-message"></div>
+
+            <form id="rsvpForm" class="form">
+                <!-- Name -->
+                <div class="form-group">
+                    <label for="name">Your Name *</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder="Enter your full name" 
+                        required
+                    >
+                    <span id="nameError" class="error-message"></span>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        placeholder="(555) 123-4567" 
+                        required
+                    >
+                    <span id="phoneError" class="error-message"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">Email (Optional)</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="your@email.com"
+                    >
+                    <span id="emailError" class="error-message"></span>
+                </div>
+
+                <!-- Attending -->
+                <div class="form-group">
+                    <label>Will you be able to attend? *</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="attending" value="Yes">
+                            <span>Yes, I'll be there!</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="attending" value="No">
+                            <span>Sorry, I can't make it</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="attending" value="Maybe">
+                            <span>Not sure yet</span>
+                        </label>
+                    </div>
+                    <span id="attendingError" class="error-message"></span>
+                </div>
+
+                <!-- Number of Guests -->
+                <div class="form-group">
+                    <label for="guests">Number of Guests (including you) *</label>
+                    <select id="guests" name="guests" required>
+                        <option value="">Select number of guests</option>
+                        <option value="1">Just me (1)</option>
+                        <option value="2">2 people</option>
+                        <option value="3">3 people</option>
+                        <option value="4">4 people</option>
+                        <option value="5">5 people</option>
+                        <option value="6">6 people</option>
+                        <option value="7">7 or more</option>
+                    </select>
+                    <span id="guestsError" class="error-message"></span>
+                </div>
+
+                <!-- Additional Guests (if 7+ selected) -->
+                <div class="form-group" id="additionalGuestsGroup" style="display: none;">
+                    <label for="additionalGuests">Total Number of Guests *</label>
+                    <input 
+                        type="number" 
+                        id="additionalGuests" 
+                        name="additionalGuests" 
+                        min="7" 
+                        placeholder="Enter total number"
+                    >
+                </div>
+
+                <!-- Special Requests -->
+                <div class="form-group">
+                    <label for="requests">Special Requests or Dietary Preferences</label>
+                    <textarea 
+                        id="requests" 
+                        name="requests" 
+                        placeholder="Let us know if you have any dietary restrictions or special requests..."
+                        rows="3"
+                    ></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-submit">Submit RSVP</button>
+            </form>
+
+            <p class="form-note">* Required fields</p>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Looking forward to celebrating with you!</p>
+            <p style="font-size: 0.9em; opacity: 0.6;">We'll send confirmations to the email and phone provided</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
