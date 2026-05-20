@@ -227,6 +227,22 @@
             <div class="glass-card rounded-3xl p-6 sm:p-10">
                 <form id="rsvpForm" class="flex flex-col">
                     
+                    <!-- RSVP Status Selection -->
+                    <div class="flex gap-3 mb-6">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="rsvpStatus" value="attending" class="peer sr-only" checked onchange="toggleGuestCount(true)">
+                            <div class="text-center py-3 px-2 rounded-xl border border-brand-gold/30 peer-checked:bg-brand-green peer-checked:text-white peer-checked:border-brand-green transition-all duration-300 font-sans font-medium text-[13px] sm:text-sm text-brand-darkText">
+                                Will Attend
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="rsvpStatus" value="declined" class="peer sr-only" onchange="toggleGuestCount(false)">
+                            <div class="text-center py-3 px-2 rounded-xl border border-brand-gold/30 peer-checked:bg-brand-darkText/60 peer-checked:text-white peer-checked:border-brand-darkText/60 transition-all duration-300 font-sans font-medium text-[13px] sm:text-sm text-brand-darkText">
+                                Unable to Attend
+                            </div>
+                        </label>
+                    </div>
+
                     <div class="input-group">
                         <input type="text" id="fullName" name="fullName" placeholder=" " required>
                         <label for="fullName">Full Name</label>
@@ -237,13 +253,13 @@
                         <label for="phoneNumber">Phone Number</label>
                     </div>
 
-                    <div class="input-group">
+                    <div class="input-group transition-all duration-500 overflow-hidden" id="guestCountContainer" style="max-height: 100px; opacity: 1;">
                         <input type="number" id="guestCount" name="guestCount" placeholder=" " min="1" max="10" required>
                         <label for="guestCount">Total Number of Guests</label>
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" id="submitBtn" class="mt-4 w-full bg-brand-green hover:bg-brand-greenLight text-white font-sans font-medium tracking-wide text-lg py-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center">
+                    <button type="submit" id="submitBtn" class="mt-2 w-full bg-brand-green hover:bg-brand-greenLight text-white font-sans font-medium tracking-wide text-lg py-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center">
                         <span id="btnText">Send RSVP</span>
                         <!-- Loading Spinner (Hidden by default) -->
                         <svg id="btnSpinner" class="hidden animate-spin ml-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -317,8 +333,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
             </div>
-            <h3 class="font-serif text-3xl text-brand-darkText mb-2">Thank You!</h3>
-            <p class="font-sans text-brand-darkText/70 mb-8">Your RSVP has been beautifully received. We look forward to celebrating with you.</p>
+            <h3 id="modalTitle" class="font-serif text-3xl text-brand-darkText mb-2">Thank You!</h3>
+            <p id="modalMessage" class="font-sans text-brand-darkText/70 mb-8">Your RSVP has been beautifully received. We look forward to celebrating with you.</p>
             <button onclick="closeModal()" class="w-full bg-brand-gold hover:bg-brand-goldDark text-white py-3 rounded-xl font-medium transition-colors">
                 Close
             </button>
@@ -331,15 +347,25 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Fallback IDs if environment variables are missing
+        // Environment variables for preview sandbox
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'housewarming-rsvp-app';
         let firebaseConfig = {};
         
         try {
-            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                // Mock config for local structure testing if needed
-                projectId: "demo-project"
-            };
+            // Use preview environment config if available, otherwise use placeholders for GitHub
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                // TODO: REPLACE THIS ENTIRE OBJECT WITH YOUR FIREBASE CONFIG WHEN HOSTING ON GITHUB
+                firebaseConfig = {
+                    apiKey: "YOUR_API_KEY_HERE",
+                    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+                    projectId: "YOUR_PROJECT_ID",
+                    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+                    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+                    appId: "YOUR_APP_ID"
+                };
+            }
         } catch(e) {
             console.error("Firebase config parsing error", e);
         }
@@ -351,12 +377,16 @@
         // Authentication Setup (Required for DB access)
         async function authenticate() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    console.log("Authenticated successfully.");
                 } else {
-                    await signInAnonymously(auth);
+                    console.warn("Using placeholder Firebase API Key. Please update firebaseConfig to enable database features on your hosted website.");
                 }
-                console.log("Authenticated successfully.");
             } catch (error) {
                 console.error("Authentication failed:", error);
             }
@@ -423,6 +453,28 @@
         
         revealElements.forEach(el => revealObserver.observe(el));
 
+        // Form Visibility Toggle Logic
+        window.toggleGuestCount = function(isAttending) {
+            const container = document.getElementById('guestCountContainer');
+            const input = document.getElementById('guestCount');
+            const btnText = document.getElementById('btnText');
+            
+            if (isAttending) {
+                container.style.maxHeight = "100px";
+                container.style.opacity = "1";
+                container.style.marginBottom = "1.5rem";
+                input.required = true;
+                btnText.textContent = "Send RSVP";
+            } else {
+                container.style.maxHeight = "0";
+                container.style.opacity = "0";
+                container.style.marginBottom = "0";
+                input.required = false;
+                input.value = "";
+                btnText.textContent = "Send Reply";
+            }
+        };
+
         // Form Handling Logic
         const form = document.getElementById('rsvpForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -447,11 +499,16 @@
             submitBtn.disabled = true;
             submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
 
+            // Determine if attending or declining
+            const rsvpStatus = document.querySelector('input[name="rsvpStatus"]:checked').value;
+            const finalGuestCount = rsvpStatus === 'attending' ? parseInt(document.getElementById('guestCount').value, 10) : 0;
+
             // Gather Data
             const formData = {
                 fullName: document.getElementById('fullName').value.trim(),
                 phoneNumber: document.getElementById('phoneNumber').value.trim(),
-                guestCount: parseInt(document.getElementById('guestCount').value, 10),
+                status: rsvpStatus,
+                guestCount: finalGuestCount,
                 timestamp: serverTimestamp(),
                 // Meta data for the specific event context
                 event: "Home Blessing & Puja - July 18 2026",
@@ -470,8 +527,9 @@
                 await setDoc(rsvpDocRef, formData, { merge: true });
 
                 // Success UI
-                showSuccessModal();
+                showSuccessModal(rsvpStatus);
                 form.reset();
+                window.toggleGuestCount(true); // Reset to default attending state
 
                 // If admin is viewing, refresh the table
                 if (isAdmin || !document.getElementById('adminPanel').classList.contains('hidden')) {
@@ -483,7 +541,7 @@
                 // In a production app, show a toast notification here
             } finally {
                 // Reset Button UI
-                btnText.textContent = "Send RSVP";
+                btnText.textContent = document.querySelector('input[name="rsvpStatus"]:checked').value === 'attending' ? "Send RSVP" : "Send Reply";
                 btnSpinner.classList.add('hidden');
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
@@ -491,7 +549,18 @@
         });
 
         // Modal Functions globally accessible
-        window.showSuccessModal = () => {
+        window.showSuccessModal = (status) => {
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+
+            if (status === 'declined') {
+                modalTitle.textContent = "Received";
+                modalMessage.textContent = "Thank you for letting us know. You will be missed!";
+            } else {
+                modalTitle.textContent = "Thank You!";
+                modalMessage.textContent = "Your RSVP has been beautifully received. We look forward to celebrating with you.";
+            }
+
             successModal.classList.remove('opacity-0', 'pointer-events-none');
             successCard.classList.remove('scale-95');
             successCard.classList.add('scale-100');
@@ -526,15 +595,24 @@
                     const count = data.guestCount || 0;
                     totalGuests += count;
                     
+                    const isDeclined = data.status === 'declined';
+                    const statusUI = isDeclined 
+                        ? `<span class="text-[10px] uppercase font-bold text-red-800/60 bg-red-800/10 px-2 py-1 rounded">Declined</span>`
+                        : `<span class="font-bold text-brand-green">${count}</span>`;
+
                     tableHtml += `
                         <tr class="border-b border-brand-gold/10 hover:bg-brand-gold/5 transition-colors">
-                            <td class="py-3 pl-2">${data.fullName}</td>
-                            <td class="py-3">${data.phoneNumber}</td>
-                            <td class="py-3 pr-2 text-right font-bold text-brand-green">${count}</td>
+                            <td class="py-3 pl-2 ${isDeclined ? 'opacity-60' : ''}">${data.fullName}</td>
+                            <td class="py-3 ${isDeclined ? 'opacity-60' : ''}">${data.phoneNumber}</td>
+                            <td class="py-3 pr-2 text-right">${statusUI}</td>
                         </tr>
                     `;
                     
-                    emailBody += `- ${data.fullName} (${data.phoneNumber}): ${count} guests%0D%0A`;
+                    if (isDeclined) {
+                        emailBody += `- ${data.fullName} (${data.phoneNumber}): Declined%0D%0A`;
+                    } else {
+                        emailBody += `- ${data.fullName} (${data.phoneNumber}): ${count} guests%0D%0A`;
+                    }
                 });
                 
                 document.getElementById('totalGuests').textContent = totalGuests;
